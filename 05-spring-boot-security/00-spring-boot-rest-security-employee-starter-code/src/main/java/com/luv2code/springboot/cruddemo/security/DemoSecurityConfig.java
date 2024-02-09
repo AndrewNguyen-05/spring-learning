@@ -14,6 +14,7 @@ import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.sql.DataSource;
+import javax.xml.crypto.Data;
 
 @Configuration
 public class DemoSecurityConfig {
@@ -54,11 +55,26 @@ public class DemoSecurityConfig {
         http.csrf(csrf -> csrf.disable());
         return http.build();
     }
-
     // add support for JDBC, no more hardcode (1st bean)
+//    @Bean
+//    public UserDetailsManager userDetailsManager(DataSource dataSource){
+//        return new JdbcUserDetailsManager(dataSource);
+//    }
     @Bean
     public UserDetailsManager userDetailsManager(DataSource dataSource){
-        return new JdbcUserDetailsManager(dataSource);
+        JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
+
+        //define query to retrieve user by username
+        jdbcUserDetailsManager.setUsersByUsernameQuery(
+                "select user_id, pw, active from members where user_id=?"
+        );
+
+        //define query to retrieve authorities/roles by username
+        jdbcUserDetailsManager.setAuthoritiesByUsernameQuery(
+                "select user_id, role from roles where user_id=?"
+        );
+
+        return jdbcUserDetailsManager;
     }
 
 }
